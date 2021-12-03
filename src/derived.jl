@@ -85,7 +85,7 @@ abstract type PROPERTY_UNIQUEGEOMETRY end
 GridComponent4TypeProperty(::Type{ITEMTYPE_CELL},::Type{PROPERTY_NODES}) = CellNodes
 GridComponent4TypeProperty(::Type{ITEMTYPE_CELL},::Type{PROPERTY_VOLUME}) = CellVolumes
 GridComponent4TypeProperty(::Type{ITEMTYPE_CELL},::Type{PROPERTY_REGION}) = CellRegions
-GridComponent4TypeProperty(::Type{ITEMTYPE_CELL},::Type{PROPERTY_GEOMETRY}) = CellGeometries
+GridComponent4TypeProperty(::Type{ITEMTYPE_CELL},::Type{PROPERTY_GEOMETRY}) = CellGegometries
 GridComponent4TypeProperty(::Type{ITEMTYPE_CELL},::Type{PROPERTY_UNIQUEGEOMETRY}) = UniqueCellGeometries
 
 GridComponent4TypeProperty(::Type{ITEMTYPE_FACE},::Type{PROPERTY_NODES}) = FaceNodes
@@ -906,27 +906,28 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{CellFa
     xgrid[CellFaceSigns]
 end
 
-
 function collectVolumes4Geometries(T::Type{<:Real}, xgrid::ExtendableGrid{Tc,Ti}, ItemType) where {Tc,Ti}
+    mycollectVolumes4Geometries(T,xgrid,ItemType)
+#    @code_warntype mycollectVolumes4Geometries(T,xgrid,ItemType)
+end
+
+function mycollectVolumes4Geometries(T::Type{<:Real}, xgrid::ExtendableGrid{Tc,Ti}, ItemType) where {Tc,Ti}
     # get links to other stuff
-    xCoordinates = xgrid[Coordinates]
-    xCoordinateSystem = xgrid[CoordinateSystem]
-    xItemNodes = xgrid[GridComponent4TypeProperty(ItemType,PROPERTY_NODES) ]
-    xGeometries = xgrid[GridComponent4TypeProperty(ItemType,PROPERTY_GEOMETRY) ]
-    EG = xgrid[GridComponent4TypeProperty(ItemType,PROPERTY_UNIQUEGEOMETRY) ]
+    xCoordinates::Matrix{Tc} = xgrid[Coordinates]
+    xCoordinateSystem= xgrid[CoordinateSystem]
+    xItemNodes::Adjacency{Ti} = xgrid[GridComponent4TypeProperty(ItemType,PROPERTY_NODES) ]
+#    xGeometries::ElementInfo{DataType} = xgrid[UniqueCellGeometries]
+    EG::Vector{DataType} = xgrid[GridComponent4TypeProperty(ItemType,PROPERTY_UNIQUEGEOMETRY) ]
+
+    xGeometries = xgrid[CellGeometries]
+
+    
     nitems::Ti = num_sources(xItemNodes)
-
-    # get Volume4ElemType handlers
-    handlers = Array{Function,1}(undef, length(EG))
-    for j = 1: length(EG)
-        handlers[j] = Volume4ElemType(xCoordinates, xItemNodes, EG[j], xCoordinateSystem)
-    end
-
     # init Volumes
     xVolumes::Array{T,1} = zeros(T,nitems)
 
     # loop over items and call handlers
-    iEG::Ti = 1
+    iEG = 1
     itemEG = EG[1]
     for item = 1 : nitems
         if length(EG) > 1
@@ -938,11 +939,21 @@ function collectVolumes4Geometries(T::Type{<:Real}, xgrid::ExtendableGrid{Tc,Ti}
                 end
             end
         end
-        xVolumes[item] = handlers[iEG](item)
+#        xVolumes[item] =   Volume4ElemType(xCoordinates, xItemNodes, item, EG[iEG], xCoordinateSystem)
+        @time       xVolumes[item] =   Volume4ElemType(xCoordinates, xItemNodes, item, Tetrahedron3D, xCoordinateSystem)
     end
-
+    @show EG
     xVolumes
 end
+
+
+function allochunt(n)
+    g=simplexgrid(1.:n,1.:n,1.:n)
+    @time v=g[CellVolumes]
+    sum(v)
+end
+
+
 
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{CellVolumes}) where {Tc,Ti}
