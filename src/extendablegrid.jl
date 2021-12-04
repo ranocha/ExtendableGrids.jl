@@ -345,6 +345,8 @@ function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridFloatCo
 end
 
 
+
+
 ############################################################
 # Instantiation methods
 

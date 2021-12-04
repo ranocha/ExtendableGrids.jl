@@ -3,10 +3,11 @@ $(TYPEDEF)
 
 Vector with constant value
 """
-struct VectorOfConstants{T,Tl} <: AbstractVector{T}
+struct VectorOfConstants{T} <: AbstractVector{T}
     val::T
-    len::Tl
+    len::Int64
 end
+VectorOfConstants(v::T,len::Tl) where {T,Tl<:Integer}=VectorOfConstants{T}(v,Int64(len))
 
 Base.IndexStyle(::Type{<:VectorOfConstants}) = IndexLinear()
 
@@ -30,10 +31,11 @@ $(TYPEDSIGNATURES)
 
 Access
 """
-function Base.getindex(v::VectorOfConstants,i)
-    if i>v.len
-        throw(BoundsError(v, i))
-    end
+function Base.getindex(v::VectorOfConstants{T},i)::T where{T}
+    v.val
+end
+
+function Base.getindex(v::VectorOfConstants{T},i)::T where{T}
     v.val
 end
 

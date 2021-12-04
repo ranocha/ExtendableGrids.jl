@@ -23,7 +23,7 @@
 #end
 
 const GridEGTypes = Vector{DataType}
-const GridRegionTypes{Ti} = Union{VectorOfConstants{Ti}, Array{Ti,1}}
+#const GridRegionTypes{Ti} = Union{VectorOfConstants{Ti}, Array{Ti,1}}
 
 
 # additional ExtendableGrids adjacency types 
@@ -907,21 +907,19 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{CellFa
 end
 
 function collectVolumes4Geometries(T::Type{<:Real}, xgrid::ExtendableGrid{Tc,Ti}, ItemType) where {Tc,Ti}
+ #   @code_warntype mycollectVolumes4Geometries(T,xgrid,ItemType)
     mycollectVolumes4Geometries(T,xgrid,ItemType)
-#    @code_warntype mycollectVolumes4Geometries(T,xgrid,ItemType)
 end
 
 function mycollectVolumes4Geometries(T::Type{<:Real}, xgrid::ExtendableGrid{Tc,Ti}, ItemType) where {Tc,Ti}
     # get links to other stuff
-    xCoordinates::Matrix{Tc} = xgrid[Coordinates]
-    xCoordinateSystem= xgrid[CoordinateSystem]
+    xCoordinates = xgrid[Coordinates]
+    xCoordinateSystem = xgrid[CoordinateSystem]
     xItemNodes::Adjacency{Ti} = xgrid[GridComponent4TypeProperty(ItemType,PROPERTY_NODES) ]
-#    xGeometries::ElementInfo{DataType} = xgrid[UniqueCellGeometries]
-    EG::Vector{DataType} = xgrid[GridComponent4TypeProperty(ItemType,PROPERTY_UNIQUEGEOMETRY) ]
-
+#    xGeometries = xgrid[UniqueCellGeometries]
     xGeometries = xgrid[CellGeometries]
+    EG = xgrid[GridComponent4TypeProperty(ItemType,PROPERTY_UNIQUEGEOMETRY) ]
 
-    
     nitems::Ti = num_sources(xItemNodes)
     # init Volumes
     xVolumes::Array{T,1} = zeros(T,nitems)
@@ -930,19 +928,19 @@ function mycollectVolumes4Geometries(T::Type{<:Real}, xgrid::ExtendableGrid{Tc,T
     iEG = 1
     itemEG = EG[1]
     for item = 1 : nitems
-        if length(EG) > 1
-            itemEG = xGeometries[item]
-            for j=1:length(EG)
-                if itemEG == EG[j]
-                    iEG = j
-                    break;
-                end
-            end
-        end
-#        xVolumes[item] =   Volume4ElemType(xCoordinates, xItemNodes, item, EG[iEG], xCoordinateSystem)
-        @time       xVolumes[item] =   Volume4ElemType(xCoordinates, xItemNodes, item, Tetrahedron3D, xCoordinateSystem)
+        # if length(EG) > 1
+        #     itemEG = xGeometries[item]
+        #     for j=1:length(EG)
+        #         if itemEG == EG[j]
+        #             iEG = j
+        #             break;
+        #         end
+        #     end
+        # end
+        #        xVolumes[item] =   Volume4ElemType(xCoordinates, xItemNodes, item, EG[iEG], xCoordinateSystem)
+       
+        xVolumes[item] =   Volume4ElemType(xCoordinates, xItemNodes, item,xGeometries[item],  xCoordinateSystem)
     end
-    @show EG
     xVolumes
 end
 
