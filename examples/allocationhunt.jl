@@ -44,23 +44,23 @@ end
 
 
 
-function dosomething2(::Type{Triangle2D},x,i)
+@noinline function dosomething2(::Type{Triangle2D},x,i)
     return x[i]
 end
 
-function dosomething2(::Type{Tetrahedron3D},x,i)
+@noinline function dosomething2(::Type{Tetrahedron3D},x,i)
     return x[i]
 end
     
 function typestabilitytest2(;n=100)
-    geoms=fill(Triangle2D,n)
-    geoms[1:2:n].=Tetrahedron3D
+    geoms=rand([Triangle2D,Tetrahedron3D],n)
     x=rand(n)
+    @show typeof(geoms)
     geom=geoms[1]
 
     s=0
     @time for i=1:n
-       s+=dosomething2(geoms[i],x,i) 
+@views       s+=dosomething2(geoms[i],x,i) 
     end
     s
 end

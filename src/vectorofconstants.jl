@@ -35,9 +35,6 @@ function Base.getindex(v::VectorOfConstants{T},i)::T where{T}
     v.val
 end
 
-function Base.getindex(v::VectorOfConstants{T},i)::T where{T}
-    v.val
-end
 
 """
 $(TYPEDSIGNATURES)
